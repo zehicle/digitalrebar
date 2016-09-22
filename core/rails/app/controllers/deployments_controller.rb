@@ -262,6 +262,7 @@ class DeploymentsController < ApplicationController
           # and put node in deployment if it's not
           if n.deployment_id != deployment.id
             n.deployment_id = deployment.id
+            n.tenant_id = deployment.tenant_id
             n.save!
           end
           Rails.logger.debug("Deployment Batch: added node #{n.name} to deployment #{deployment.name}")
@@ -279,11 +280,11 @@ class DeploymentsController < ApplicationController
             default_prefix = "#{deployment.name}-#{(block+1).to_s.rjust(2, "0")}"
             name = "#{node["prefix"] || default_prefix}-#{i.to_s.rjust(3, "0")}.#{provider.name}.#{params["tld"] || deployment.name + '.cloud'}"
             Rails.logger.debug("Deployment Batch: adding node #{name}")
-            validate_create(@current_user.current_tenant_id, cap("CREATE"), Node)
+            validate_create(deployment.tenant_id, cap("CREATE"), Node)
             newnode = Node.create!( name: name,
                                   description: node["description"] || t("useradded", :user => @current_user.username),
                                   admin: false,
-                                  tenant_id: @current_user.current_tenant_id,
+                                  tenant_id: deployment.tenant_id,
                                   deployment_id: deployment.id,
                                   provider_id: provider.id,
                                   allocated: false,
