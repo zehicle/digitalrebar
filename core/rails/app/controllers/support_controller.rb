@@ -25,102 +25,8 @@ class SupportController < ApplicationController
     render :text=>params[:id]
   end
 
-  def fail
-    raise I18n.t('chuck_norris')
-  end
-
-  # used to lookup localization values
-  def i18n
-    begin
-      render :text=>I18n.translate(params[:id], :raise => I18n::MissingTranslationData)
-    rescue I18n::MissingTranslationData
-      render :text=>"No translation for #{params[:id]}", :status => 404
-    end
-  end
-
-  # Legacy Support (UI version moved to loggin barclamp)
-  def logs
-    @file = "rebar-logs-#{ctime}.tar.bz2"
-    system("sudo -i /opt/dell/bin/gather_logs.sh #{@file}")
-    redirect_to "/export/#{@file}"
-  end
-  
-  def get_cli
-    system("sudo -i /opt/dell/bin/gather_cli.sh #{request.env['SERVER_ADDR']} #{request.env['SERVER_PORT']}")
-    redirect_to "/rebar-cli.tar.gz"
-  end
-
   def import
     @barclamps = Barclamp.all
-  end
-
-  def index
-    @waiting = params['waiting'] == 'true'
-    remove_file 'export', params[:id] if params[:id]
-    @exports = { :count=>0, :logs=>[], :cli=>[], :chef=>[], :other=>[], :bc_import=>[] }
-    Dir.entries(export_dir).each do |f|
-      if f =~ /^\./
-        next # ignore rest of loop
-      elsif f =~ /^KEEP_THIS.*/
-        next # ignore rest of loop
-      elsif f =~ /^rebar-logs-.*/
-        @exports[:logs] << f 
-      elsif f =~ /^rebar-cli-.*/
-        @exports[:cli] << f
-      elsif f =~ /^rebar-chef-.*/
-        @exports[:chef] << f 
-      elsif f =~ /(.*).import.log$/
-        @exports[:bc_import] << f 
-      else
-        @exports[:other] << f
-      end
-      @exports[:count] += 1
-      @file = params['file'] if params['file']
-      @waiting = false if @file == f
-    end
-    respond_to do |format|
-      format.html # index.html.haml
-      format.json { render :json => @exports }
-    end
-  end
-
-  # used by BDD to create Admin node
-  def bootstrap_post
-    # only create if no other netwroks
-    if Network.where(:name=>'admin').count == 0
-      deployment = Deployment.system
-      Network.transaction do
-        # admin network
-        net = Network.create :name=>'admin', :description=>I18n.t('support.bootstrap.admin_net', :default=>""),  :deployment_id=>deployment.id, :conduit=>Network::DEFAULTCONDUIT, :v6prefix => Network::V6AUTO, :category => "admin"
-        NetworkRange.create :name=>'admin', :network_id=>net.id, :first=>"192.168.124.10/24", :last=>"192.168.124.11/24"
-        NetworkRange.create :name=>'dhcp', :network_id=>net.id, :first=>"192.168.124.21/24", :last=>"192.168.124.80/24"
-        NetworkRange.create :name=>'host', :network_id=>net.id, :first=>"192.168.124.81/24", :last=>"192.168.124.254/24"
-        # bmc network
-        bmc = Network.create :name=>'bmc', :description=>I18n.t('support.bootstrap.bmc_net', :default=>""),  :deployment_id=>deployment.id, :conduit=>Network::BMCCONDUIT, :v6prefix => Network::V6AUTO, :category => "bmc"
-        NetworkRange.create :name=>'admin', :network_id=>bmc.id, :first=>"192.168.128.10/24", :last=>"192.168.128.20/24"
-        NetworkRange.create :name=>'host', :network_id=>bmc.id, :first=>"192.168.128.21/24", :last=>"192.168.128.254/24"
-
-      end
-    end
-  end
-
-  def restart
-    @init = false
-    if params[:id].nil?
-      render
-    elsif params[:id].eql? "request" or params[:id].eql? "import"
-      @init = true
-      render
-    elsif params[:id].eql? "in_process"
-      %x[sudo bluepill rebar-webserver restart] unless Rails.env == 'development'
-      render :json=>false
-    elsif params[:id].eql? SERVER_PID
-      render :json=>false
-    elsif !params[:id].eql? SERVER_PID
-      render :json=>true
-    else
-      render
-    end
   end
 
   # allows user to change UI behaviors  
@@ -142,7 +48,6 @@ class SupportController < ApplicationController
 
   end
 
-  
   def settings
     respond_to do |format|
       format.html { }
@@ -168,52 +73,6 @@ class SupportController < ApplicationController
       active = NodeRole.where(state: NodeRole::ACTIVE).count
     end
     render :json=>{ :active=>active, :todo=>(total-error-active), :error=>error, :elapsed=>elapsed.to_i, :nodes=>nodes } 
-  end
-
-  private 
-
-  def bootstrap_update(yaml, key, config, params)  
-    # scan the keys we have
-    config[key].each_index do |i|
-      r = params["#{key}|#{i}"]
-      config[key][i] = (yaml ? YAML::load(r) : JSON.parse(r))
-    end
-    # add new keys
-    unless ["{}","---"].include? params["#{key}|new"]
-      r = params["#{key}|new"]
-      config[key] << (yaml ? YAML::load(r) : JSON.parse(r))
-    end
-  end
-
-
-  def ctime
-    Time.now.strftime("%Y%m%d-%H%M%S")
-  end
-  
-  def import_dir
-    check_dir 'import'
-  end
-  
-  def export_dir
-    check_dir 'export'
-  end
-
-  def check_dir(type)
-    d = File.join 'public', type
-    unless File.directory? d
-      Dir.mkdir d
-    end
-    return d    
-  end
-  
-  def remove_file(type, name)
-    begin
-      f = File.join(check_dir(type), name)
-      File.delete f
-      flash[:notice] = t('support.index.delete_succeeded') + ": " + f
-    rescue
-      flash[:notice] = t('support.index.delete_failed') + ": " + f
-    end
   end
   
 end 
