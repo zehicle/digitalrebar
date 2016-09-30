@@ -224,7 +224,7 @@ class DeploymentsController < ApplicationController
   end
 
   def internal_batch(did)
-    roles = {}
+    roles = { }
     deployment_roles = []
     deployment = nil
 
@@ -330,6 +330,16 @@ class DeploymentsController < ApplicationController
         params["attribs"].each do |a, v|
           Attrib.set(a, deployment, v)
         end
+      end
+
+      # handle setting the rebar_access value - we want to preserve keys if they already exist
+      if params["public_keys"]
+        Rails.logger.debug("Deployment Batch: setting public keys")
+        raccess = find_key_cap(Role, "rebar-access", cap("READ","ROLE"))
+        raccess.add_to_deployment(deployment)
+        keys = Attrib.get("rebar-access_keys", deployment) || {}
+        keys.merge params["public_keys"]
+        Attrib.set("rebar-access_keys", deployment, keys)
       end
 
     end # end Transaction
