@@ -74,7 +74,8 @@ type roleImport struct {
 	Provides     []string       `json:"provides",yaml:"provides"`
 	Flags        []string       `json:"flags",yaml:"flags"`
 	Attribs      []attribImport `json:"attribs",yaml:"attribs"`
-	WantsAttribs string         `json:"wants_attribs",yaml:"wants_attribs"`
+	WantsAttribs string         `json:"wants-attribs",yaml:"wants-attribs"`
+	Metadata     interface{}    `json:"metadata",yaml:"metadata"`
 }
 
 type hammerImport struct {
@@ -85,15 +86,16 @@ type hammerImport struct {
 }
 
 type barclampImport struct {
-	Name        string `json:"name",yaml:"name"`
-	Parent      string `json:"parent,omitempty",yaml:"parent,omitempty"`
-	Display     string `json:"display",yaml:"display"`
-	Description string `json:"description",yaml:"description"`
-	Version     string `json:"version",yaml:"version"`
-	SourceURL   string `json:"source_url",yaml:"source_url"`
-	SourcePath  string `json:"source_path",yaml:"source_path"`
-	License     string `json:"license",yaml:"license"`
-	LicenseURL  string `json:"license_url",yaml:"license_url"`
+	Name        string      `json:"name",yaml:"name"`
+	Parent      string      `json:"parent,omitempty",yaml:"parent,omitempty"`
+	Display     string      `json:"display",yaml:"display"`
+	Description string      `json:"description",yaml:"description"`
+	Version     string      `json:"version",yaml:"version"`
+	SourceURL   string      `json:"source_url",yaml:"source_url"`
+	SourcePath  string      `json:"source_path",yaml:"source_path"`
+	License     string      `json:"license",yaml:"license"`
+	LicenseURL  string      `json:"license_url",yaml:"license_url"`
+	Metadata    interface{} `json:"metadata",yaml:"metadata"`
 }
 
 type BarclampImport struct {

@@ -1,3 +1,9 @@
+PATH
+  remote: /opt/digitalrebar/rackn-workloads/burnin/rebar_engine/barclamp_burnin
+  specs:
+    barclamp_burnin (0.0.1)
+      rails
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -455,6 +461,7 @@ PLATFORMS
 
 DEPENDENCIES
   active_scaffold
+  barclamp_burnin!
   berkshelf
   bunny
   chef (~> 12.3)
@@ -498,4 +505,4 @@ DEPENDENCIES
   xml-simple
 
 BUNDLED WITH
-   1.13.6
+   1.13.7

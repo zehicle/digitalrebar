@@ -18,11 +18,11 @@
 # The production environment is meant for finished, "live" apps.
 # Code is not reloaded between requests
 Rebar::Application.configure do
-  config.cache_classes = true
+  config.cache_classes = false
   # Full error reports are disabled and caching is turned on
   #config.action_controller.consider_all_requests_local = false
-  config.action_controller.perform_caching             = true
-  config.action_view.cache_template_loading            = true
+  config.action_controller.perform_caching             = false
+  config.action_view.cache_template_loading            = false
   config.active_support.deprecation = :notify
 
   # Disable request forgery protection in test environment
@@ -30,8 +30,8 @@ Rebar::Application.configure do
   config.eager_load = true
 
   # See everything in the log (default is :warn)
-  config.log_level = :warn
-  # config.log_level = :debug
+  #config.log_level = :warn
+  config.log_level = :debug
 
   # Use a different logger for distributed setups
 

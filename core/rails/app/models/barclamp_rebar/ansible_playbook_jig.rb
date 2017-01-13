@@ -56,6 +56,8 @@ class BarclampRebar::AnsiblePlaybookJig < Jig
     address = node.address
     return nil unless address
 
+    Rails.logger.info("ZEHICLE2 #{inventory_map} = #{data}")
+
     answer = node.name + " ansible_ssh_host=" + address.addr + " ansible_ssh_user=root"
 
     # Process inventory map
@@ -65,6 +67,7 @@ class BarclampRebar::AnsiblePlaybookJig < Jig
     inventory_map.each do |am|
       next if am['when'] and !eval_condition(node, nr, data, am['when'])
       value = get_value(node, nr, data, am['name'])
+      next if value.nil?
       answer += " #{am['path']}=#{value}"
     end
 
@@ -73,6 +76,8 @@ class BarclampRebar::AnsiblePlaybookJig < Jig
   end
 
   def run(nr,data)
+    Rails.logger.info("ZEHICLE1 #{data}")
+
     # pull metadata from barclamp
     role_yaml = nr.role.barclamp.metadata || {}
     # override with role metadata
@@ -182,6 +187,7 @@ class BarclampRebar::AnsiblePlaybookJig < Jig
     role_yaml['attribute_map'].each do |am|
       next if am['when'] and !eval_condition(nr.node, nr, data, am['when'])
       value = get_value(nr.node, nr, data, am['name'])
+      next if value.nil?
       set_value(data, am['path'], value)
     end if role_yaml['attribute_map']
 
